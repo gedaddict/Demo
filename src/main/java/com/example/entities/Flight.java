@@ -20,11 +20,7 @@ public class Flight {
 	private LocalDateTime departure;
 	private LocalDateTime arrival;
 	private Double price;
-
-	public Flight() {
-		
-	}
-
+	
 	public String getFlightId() {
 		return flightId;
 	}
