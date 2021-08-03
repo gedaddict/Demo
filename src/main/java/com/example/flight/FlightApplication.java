@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -44,89 +45,14 @@ import com.example.repositories.FlightRepository;
 
 import net.bytebuddy.build.ToStringPlugin.Exclude;
 
-@SpringBootApplication//(exclude = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class})
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class})
 @EntityScan(basePackages = "com.example.entities")
-//@EnableJpaRepositories(basePackages = "com.example.repositories")
 @ComponentScan(basePackages = {"com.example.flight", "com.example.repositories"})
-public class FlightApplication extends SpringBootServletInitializer implements CommandLineRunner{
-	
-	private final static Logger log = LoggerFactory.getLogger(FlightApplication.class);
-	
-	@PersistenceUnit
-	EntityManagerFactory emf;
-	
-	@Autowired
-	ApplicationContext ac;
-	
-	@Autowired
-	Flight flight;
-	
-	@Autowired
-	Payment payment;
-	
-	//@Autowired
-	//PasswordEncoder passwordEncoder;
-	
-	@Bean
-	public Flight getFlightDao() {
-		return new Flight();
-	}
-	
-	@Bean
-	public Payment getPaymentDao() {
-		return new Payment();
-	}
+//@EnableJpaRepositories(basePackages = "com.example.repositories")
+public class FlightApplication extends SpringBootServletInitializer {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FlightApplication.class, args);
-	}
-	
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-		return application.sources(FlightApplication.class);
-	}
-	
-	@Override
-	public void run(String... args) throws Exception {
-		//loadTestData();
-		String[] beanDefinitionNames = ac.getBeanDefinitionNames();
-		for(String bean : beanDefinitionNames)
-			System.out.println(bean);
-	}
-	
-	private void loadTestData() {
-		
-		log.info("initializing data...");
-	    
-		EntityManager em = emf.createEntityManager();
-		
-		em.getTransaction().begin();
-		/*
-		flight.setFromLocation("Manila");
-		flight.setToLocation("Autralia");
-		flight.setDeparture(LocalDateTime.now());
-		flight.setArrival(LocalDateTime.of(LocalDate.of(2021, Month.JULY, 25), LocalTime.of(23, 45)));
-		flight.setPrice(new Double(28000));
-		
-		payment.setCardNumber(52354262);
-		payment.setBank("BPI");
-		payment.setCreditBalance(150000);
-		payment.setCreditLimit(150000);
-		
-		user.setUsername("admin");
-		user.setPassword(passwordEncoder.encode("admin"));
-		user.getRole().add(new UserRole("ADMIN", user));
-		user.getRole().add(new UserRole("MANAGER", user));
-		user.setActive(true);
-		user.setLocked(false);
-		*/
-		List resultList = em.createQuery("from User").getResultList();
-		resultList.stream().forEach(u -> em.remove(u));
-		
-		//em.persist(user);
-		
-		em.getTransaction().commit();
-		em.close();
-		
 	}
 	
 }
