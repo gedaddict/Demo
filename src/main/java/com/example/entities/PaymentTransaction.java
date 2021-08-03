@@ -39,5 +39,10 @@ public class PaymentTransaction {
 	public void setPayment(Payment payment) {
 		this.payment = payment;
 	}
+	@Override
+	public String toString() {
+		return "PaymentTransaction [transactionId=" + transactionId + ", customer=" + customer + ", payment=" + payment
+				+ "]";
+	}
 	
 }

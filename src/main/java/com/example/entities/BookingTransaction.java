@@ -22,7 +22,6 @@ public class BookingTransaction {
 	@JoinColumn(name = "flightId")
 	private Flight flight;
 	
-	
 	@ManyToOne
 	@JoinColumn(name = "transactionId")
 	private PaymentTransaction transactionId;
@@ -50,5 +49,10 @@ public class BookingTransaction {
 	}
 	public void setTransactionId(PaymentTransaction transactionId) {
 		this.transactionId = transactionId;
+	}
+	@Override
+	public String toString() {
+		return "BookingTransaction [bookingId=" + bookingId + ", customer=" + customer + ", flight=" + flight
+				+ ", transactionId=" + transactionId + "]";
 	}
 }
