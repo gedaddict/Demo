@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,20 +21,13 @@ import com.example.flight.services.BookingService;
 
 @RestController
 @RequestMapping("/bookflight")
-//@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 public class BookingController {
 	
 	private final static Logger log = LoggerFactory.getLogger(BookingController.class);
-
-	@Autowired
-	BookingService bookingService;
+	private final BookingService bookingService;
 	
-	@Autowired
-	BookingTransaction bookingTransaction;
-	
-	@Bean
-	public BookingTransaction getBookingTransaction() {
-		return new BookingTransaction();
+	public BookingController(BookingService bookingService) {
+		this.bookingService = bookingService;
 	}
 	
 	@GetMapping("")
