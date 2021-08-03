@@ -22,23 +22,27 @@ import com.example.repositories.BookingRepository;
 public class BookingService {
 
 	private final static Logger log = LoggerFactory.getLogger(BookingService.class);
+	private final BookingRepository bookingRepository;
+	private final CustomerService customerService;
+	private final PaymentService paymentService;
+	private final FlightService flightService;
+	
+	public BookingService (BookingRepository bookingRepository, CustomerService customerService,
+							PaymentService paymentService, FlightService flightService) {
+		this.bookingRepository = bookingRepository;
+		this.customerService = customerService;
+		this.paymentService = paymentService;
+		this.flightService = flightService;
+	}
 	
 	@Autowired
-	BookingRepository bookingRepository;
-	
-	@Autowired
-	CustomerService customerService;
-	
-	@Autowired
-	PaymentService paymentService;
-	
-	@Autowired
-	FlightService flightService;
-	
 	private Customer bookingCustomer;
+	@Autowired
 	private Flight flight;
-	private BookingTransaction bookingTransaction;;
+	@Autowired
 	private PaymentTransaction paymentTransaction;
+	@Autowired
+	private BookingTransaction bookingTransaction;
 	
 	public List<BookingTransaction> getAllBookingTransactions() {
 		return bookingRepository.getAllBookingTransactions();
@@ -53,7 +57,7 @@ public class BookingService {
 		log.info("executing addBooking...");
 		bookingCustomer = customerService.addCustomer(booking.getCustomer());
 		flight = flightService.getFlight(booking.getFlight().getFlightId());
-		paymentTransaction = paymentService.processPayment(booking, bookingCustomer);
+		paymentTransaction = paymentService.processPayment(booking, bookingCustomer, flight.getPrice());
 		bookingTransaction.setCustomer(bookingCustomer);
 		bookingTransaction.setFlight(flight);
 		bookingTransaction.setTransactionId(paymentTransaction);
@@ -71,7 +75,7 @@ public class BookingService {
 		PaymentTransaction updatePaymentTransaction = paymentService.updatePaymentTransaction(bookingTransaction, flight, updateBookingTransaction.getCustomer());
 		updateBookingTransaction.setTransactionId(updatePaymentTransaction);
 		
-		return bookingRepository.addBookingTransaction(updateBookingTransaction);
+		return bookingRepository.updateBookingTransaction(updateBookingTransaction);
 	}
 	
 	@Transactional
