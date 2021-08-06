@@ -7,7 +7,6 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import com.example.entities.Booking;
@@ -16,51 +15,50 @@ import com.example.entities.Customer;
 import com.example.entities.Flight;
 import com.example.entities.Payment;
 import com.example.entities.PaymentTransaction;
+import com.example.flight.exceptions.AccountNumberDoesNotExist;
+import com.example.flight.exceptions.CreditLimitReached;
+import com.example.flight.exceptions.InsufficientCreditAvailable;
+import com.example.flight.exceptions.IssuingBankDoesNotMatch;
 import com.example.repositories.PaymentRepository;
 
 @Service
 public class PaymentService {
 	
 	private final static Logger log = LoggerFactory.getLogger(PaymentService.class);
+	private final PaymentRepository paymentRepository;
 	
-	private static Payment paymentDetails;
-	
-	@Autowired
-	PaymentRepository paymentRepository;
-	
-	@Autowired
-	PaymentTransaction paymentTransaction;
-	
-	@Bean
-	public PaymentTransaction getPaymentTransaction() {
-		return new PaymentTransaction();
+	public PaymentService(PaymentRepository paymentRepository) {
+		this.paymentRepository = paymentRepository;
 	}
 	
+	@Autowired
+	private Payment payment;
+	
 	public List<Payment> getAllPaymentAccounts() {
-		
+		log.info("PaymentService - getAllPaymentAccounts...");
 		return paymentRepository.getAllPaymentAccounts();
 	}
 	
 	public Payment getPaymentDetails(int cardNumber) {
-		
+		log.info("PaymentService - getPaymentDetails: " +cardNumber);
 		return paymentRepository.getPaymentDetails(cardNumber);
 	}
 	
 	public PaymentTransaction getPaymentTransaction (String transactionId) {
-		
+		log.info("PaymentService - getPaymentTransaction: " +transactionId);
 		return paymentRepository.getPaymentTransaction(transactionId);
 	}
 
-	public PaymentTransaction processPayment(Booking booking, Customer customer) {
+	public PaymentTransaction processPayment(Booking booking, Customer customer, Double ticketPrice) {
 		log.info("processing payment...");
+		PaymentTransaction paymentTransaction = new PaymentTransaction();
 		int cardNumber = booking.getPayment().getCardNumber();
 		String bank = booking.getPayment().getBank();
-		Double ticketPrice = booking.getFlight().getPrice();
 		
 		if (validatePayment(cardNumber, bank, ticketPrice)) {
 			log.info("processing payment transaction...");
 			paymentTransaction.setCustomer(customer);
-			paymentTransaction.setPayment(paymentDetails);
+			paymentTransaction.setPayment(payment);
 			paymentRepository.addPaymentTransaction(paymentTransaction);
 		}
 			
@@ -78,8 +76,8 @@ public class PaymentService {
 			log.info("updating payment transaction...");
 			updatePaymentTransaction = this.getPaymentTransaction(bookingTransaction.getTransactionId().getTransactionId());
 			//updatePaymentTransaction.setCustomer(customer);
-			updatePaymentTransaction.setPayment(paymentDetails);
-			paymentRepository.addPaymentTransaction(updatePaymentTransaction);
+			updatePaymentTransaction.setPayment(payment);
+			paymentRepository.updatePaymentTransaction(updatePaymentTransaction);
 		}
 			
 		return updatePaymentTransaction;
@@ -106,22 +104,22 @@ public class PaymentService {
 	
 	private boolean validatePayment(int cardNumber, String bank, Double ticketPrice) {
 		log.info("validating payment info...");
-		paymentDetails = this.getPaymentDetails(cardNumber);
+		payment = this.getPaymentDetails(cardNumber);
 		
-		double creditBalance = paymentDetails.getCreditBalance();
-		double creditAvailable = paymentDetails.getCreditAvailable();
-		double creditLimit = paymentDetails.getCreditLimit();
-		String issuingBank = paymentDetails.getBank();
+		double creditBalance = payment.getCreditBalance();
+		double creditAvailable = payment.getCreditAvailable();
+		double creditLimit = payment.getCreditLimit();
+		String issuingBank = payment.getBank();
 		
-		if (!issuingBank.equals(bank)) throw new RuntimeException("Issuing bank does not match.");
+		if (!(issuingBank.toLowerCase()).equals(bank.toLowerCase())) throw new IssuingBankDoesNotMatch("Issuing bank does not match.");
+		
+		if ((creditAvailable -= ticketPrice) < 0) throw new InsufficientCreditAvailable("Insufficient credit available.");
 		
 		creditBalance += ticketPrice;
-		if (creditBalance >= creditLimit) throw new RuntimeException("You reached the credit limit.");
-	
-		if ((creditAvailable -= ticketPrice) < 0) throw new RuntimeException("Insufficient credit balance.");
+		if (creditBalance >= creditLimit) throw new CreditLimitReached("You reached the credit limit.");
 		
-		paymentDetails.setCreditBalance(creditBalance);
-		paymentDetails.setCreditAvailable(creditAvailable);
+		payment.setCreditBalance(creditBalance);
+		payment.setCreditAvailable(creditAvailable);
 		return true;
 	}
 	
@@ -129,21 +127,22 @@ public class PaymentService {
 	public Payment updatePaymentDetails(int accountNumber, Payment payment) {
 		log.info("updating payment info...");
 		
-		Payment paymentDetails = this.getPaymentDetails(accountNumber);
+		//Payment paymentDetails = this.getPaymentDetails(accountNumber);
+		payment = this.getPaymentDetails(accountNumber);
 		
-		if (paymentDetails == null) throw new RuntimeException("account number does not exist.");
+		if (payment == null) throw new AccountNumberDoesNotExist("account number does not exist.");
 		
-		paymentDetails.setBank(payment.getBank());
-		paymentDetails.setCreditLimit(payment.getCreditLimit());
-		paymentDetails.setCreditBalance(payment.getCreditBalance());
-		paymentDetails.setCreditAvailable(payment.getCreditAvailable());
+		payment.setBank(payment.getBank());
+		payment.setCreditLimit(payment.getCreditLimit());
+		payment.setCreditBalance(payment.getCreditBalance());
+		payment.setCreditAvailable(payment.getCreditAvailable());
 		
-		return paymentRepository.updatePaymentDetails(paymentDetails);
+		return paymentRepository.updatePaymentDetails(payment);
 	}
 	
 	@Transactional
 	public void cancelPaymentAccount(int accountNumber) {
-		paymentDetails = this.getPaymentDetails(accountNumber);
-		paymentRepository.cancelPaymentAccount(paymentDetails);
+		payment = this.getPaymentDetails(accountNumber);
+		paymentRepository.cancelPaymentAccount(payment);
 	}
 }
