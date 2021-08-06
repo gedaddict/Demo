@@ -1,11 +1,13 @@
 package com.example.flight.controllers;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,33 +33,37 @@ public class BookingController {
 	}
 	
 	@GetMapping("")
-	public List<BookingTransaction> getAllBookingTransactions() {
-		log.info("executing getAllBookingTransactions");
-		return bookingService.getAllBookingTransactions();
+	public ResponseEntity<List<BookingTransaction>> getAllBookingTransactions() {
+		log.info("executing getAllBookingTransactions... ");
+		return new ResponseEntity<List<BookingTransaction>>(bookingService.getAllBookingTransactions(), HttpStatus.ACCEPTED);
 	}
 	
 	@GetMapping("/{bookingId}")
-	public BookingTransaction getBooking(@PathVariable("bookingId") String bookingId) {
-		return bookingService.getBookingTransaction(bookingId);
+	public ResponseEntity<BookingTransaction> getBooking(@PathVariable("bookingId") String bookingId) {
+		log.info("executing getBooking... ");
+		return new ResponseEntity<BookingTransaction>(bookingService.getBookingTransaction(bookingId), HttpStatus.ACCEPTED);
 	}
 	
 	@PostMapping("")
-	public BookingTransaction addBooking(@RequestBody Booking booking) {
-		log.info("executing addBooking");
-		return bookingService.addBooking(booking);
+	public ResponseEntity<BookingTransaction> addBooking(@RequestBody Booking booking) {
+		log.info("executing addBooking... ");
+		return new ResponseEntity<BookingTransaction>(bookingService.addBooking(booking), HttpStatus.ACCEPTED);
 	}
 	
 	@PutMapping("{bookingId}")
-	public BookingTransaction updateBookingTransaction(@PathVariable("bookingId") String bookingId, @RequestBody BookingTransaction bookingTransaction) {
-		log.info("executing updateBookingTransaction");
-		return bookingService.updateBookingTransaction(bookingId, bookingTransaction);
+	public ResponseEntity<BookingTransaction> updateBookingTransaction(@PathVariable("bookingId") String bookingId, @RequestBody BookingTransaction bookingTransaction) {
+		log.info("executing updateBookingTransaction... ");
+		return new ResponseEntity<BookingTransaction>(bookingService.updateBookingTransaction(bookingId, bookingTransaction), HttpStatus.ACCEPTED);
 	}
 	
 	@DeleteMapping("/{bookingId}")
-	public String cancelBooking(@PathVariable("bookingId") String bookingId) {
+	public ResponseEntity<Map<String, String>> cancelBooking(@PathVariable("bookingId") String bookingId) {
+		log.info("executing cancelBooking... ");
 		bookingService.cancelBooking(bookingId);
-		return bookingId + " is cancelled"
-				+ "\n"
-				+ " ticket price will be refunded back to your payment account.  ";
+		HashMap<String, String> map = new HashMap<>();
+		map.put("bookingId", bookingId);
+		map.put("message", "booking: "+bookingId +" is now cancelled"
+				+ " ticket price will be refunded back to your payment account.  ");
+		return new ResponseEntity<Map<String,String>>(map, HttpStatus.ACCEPTED);
 	}
 }
