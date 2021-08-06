@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import com.example.entities.Booking;
@@ -55,6 +56,7 @@ public class BookingService {
 	@Transactional
 	public BookingTransaction addBooking(Booking booking) {
 		log.info("executing addBooking...");
+		BookingTransaction bookingTransaction = new BookingTransaction();
 		bookingCustomer = customerService.addCustomer(booking.getCustomer());
 		flight = flightService.getFlight(booking.getFlight().getFlightId());
 		paymentTransaction = paymentService.processPayment(booking, bookingCustomer, flight.getPrice());
@@ -82,7 +84,6 @@ public class BookingService {
 	public void cancelBooking(String bookingId) {
 		log.info("cancelling Booking...");
 		bookingTransaction = this.getBookingTransaction(bookingId);
-		
 		bookingRepository.cancelBooking(bookingTransaction);
 		log.info("processing payment transaction refund...");
 		paymentService.processRefund(bookingTransaction);
