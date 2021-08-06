@@ -1,8 +1,4 @@
 package com.example.flight.controllers;
-
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,30 +7,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.example.entities.Customer;
 import com.example.entities.MyUser;
-import com.example.flight.services.CustomerService;
 import com.example.flight.services.MyUserService;
 
 @Controller
@@ -42,27 +32,32 @@ import com.example.flight.services.MyUserService;
 public class HomeController {
 	
 	private static final Logger log = LoggerFactory.getLogger(HomeController.class);
+	private final MyUserService myUserService;
+	
+	public HomeController(MyUserService myUserService) {
+		this.myUserService = myUserService;
+	}
 	
 	@Autowired
-	MyUserService myUserService;
+	private MyUser myUser;
 	
 	@Autowired
-	MyUser myUser;
-	
-	@Autowired
-	PasswordEncoder pE;
+	private PasswordEncoder pE;
 	
 	private ModelAndView mav = new ModelAndView();
 	private UsernamePasswordAuthenticationToken auth;
 	
-	@Bean
-	public MyUser getMyUser() {
-		return new MyUser();
-	}
-	
 	@Value("${name:name not found in application.properties}")
 	private String name;
 	
+	@GetMapping("")
+	public ModelAndView index() {
+		ModelAndView mav = new ModelAndView();
+		mav.setViewName("home");
+		return mav;
+	}
+	
+	/*
 	@GetMapping("")
 	public ModelAndView index(HttpServletRequest request, Authentication auth) {
 		log.info("processing root...");
@@ -92,7 +87,7 @@ public class HomeController {
 		//return mav;
 		//return new ModelAndView("redirect:/flights");
 	}
-	
+	*/
 	@GetMapping("/login")
 	public ModelAndView login(HttpServletRequest request, Authentication auth) {
 		log.info("rendering login page");
@@ -102,19 +97,11 @@ public class HomeController {
 			auth = new UsernamePasswordAuthenticationToken(principal, credentials);
 			SecurityContextHolder.getContext().setAuthentication(auth);
 		}
-		System.out.println("auth >>>>>"+auth);
-		System.out.println("getAuthentication >>>>>"+SecurityContextHolder.getContext().getAuthentication());
-		System.out.println("getSession >>>>>"+request.getSession(false));
-		System.out.println("getSessionId >>>>>"+request.getSession().getId());
-		System.out.println("getSession isNew >>>>>"+request.getSession().isNew());
-		System.out.println("isRequestedSessionIdValid >>>>>"+request.isRequestedSessionIdValid());
 		mav.getModelMap().clear();
 		if (!auth.isAuthenticated())
 			mav.setViewName("login");
-			//return new ModelAndView("login");
 		else
 			mav.setViewName("redirect:/home");
-			//return new ModelAndView("redirect:/home");
 	return mav;
 	}
 	
@@ -122,7 +109,6 @@ public class HomeController {
 	public ModelAndView home(Authentication authentication) {
 		log.info("rendering Home page");
 		String username = authentication.getName();
-		//ModelAndView mav = new ModelAndView();
 		mav.setViewName("home");
 		mav.addObject("username", username);
 		return mav;
@@ -133,7 +119,6 @@ public class HomeController {
 		log.info("logout-success... redirecting to login page...");
 		mav.getModel().clear();
 		mav.setViewName("redirect:/login?logout=true");
-		//return new ModelAndView("redirect:/login?logout=true");
 		return mav;
 	}
 	
@@ -143,7 +128,6 @@ public class HomeController {
 		log.info("clearing credentials...");
 		SecurityContextHolder.getContext().setAuthentication(null);
 		mav.setViewName("redirect:/login?logout=true");
-		//return new ModelAndView("redirect:/login?logout=true");
 		return mav;
 	}
 	
@@ -156,15 +140,12 @@ public class HomeController {
 	@GetMapping("/users")
 	@ResponseBody
 	public List<MyUser> getAllUsers(HttpServletRequest httpServletRequest) {
-		System.out.println("Admin >>>>>"+httpServletRequest.isUserInRole("ADMIN"));
-		System.out.println("getName >>>>>"+SecurityContextHolder.getContext().getAuthentication().getName());
-		System.out.println("getAuthorities >>>>>"+SecurityContextHolder.getContext().getAuthentication().getAuthorities());
 		return myUserService.getAllUsers();
 	}
 	
 	@GetMapping("/users/{username}")
-	public MyUser getUser(@PathVariable("username") String username) {
-		return myUserService.getUser(username);
+	public ResponseEntity<MyUser> getUser(@PathVariable("username") String username) {
+		return new ResponseEntity<MyUser>(myUserService.getUser(username), HttpStatus.ACCEPTED);
 	}
 	
 	@PutMapping("/users/{username}")
@@ -180,9 +161,8 @@ public class HomeController {
 	}
 	
 	@GetMapping("/error")
-	@ResponseBody
-	public String error() {
-		return "Service unavailable...something came up.";
+	public ResponseEntity<String> error() {
+		return new ResponseEntity<String>("Service unavailable...something came up.", HttpStatus.BAD_REQUEST);
 	}
 
 }
