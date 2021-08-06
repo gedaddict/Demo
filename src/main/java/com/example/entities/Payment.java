@@ -1,17 +1,8 @@
 package com.example.entities;
 
-import java.util.UUID;
-
-import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-
-import org.springframework.boot.context.properties.bind.DefaultValue;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Payment {
@@ -55,6 +46,11 @@ public class Payment {
 	}
 	public void setCreditAvailable(double creditAvailable) {
 		this.creditAvailable = creditAvailable;
+	}
+	@Override
+	public String toString() {
+		return "Payment [cardNumber=" + cardNumber + ", bank=" + bank + ", creditLimit=" + creditLimit
+				+ ", creditBalance=" + creditBalance + ", creditAvailable=" + creditAvailable + "]";
 	}
 	
 }
