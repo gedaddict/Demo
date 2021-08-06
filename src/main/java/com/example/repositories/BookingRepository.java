@@ -12,6 +12,7 @@ public interface BookingRepository {
 	public List<BookingTransaction> getAllBookingTransactions();
 	public BookingTransaction getBookingTransaction(String bookingId);
 	public BookingTransaction addBookingTransaction(BookingTransaction bookingTransaction);
+	public BookingTransaction updateBookingTransaction(BookingTransaction bookingTransaction);
 	public Booking updateBooking(String bookingId, Booking booking);
 	public void cancelBooking(BookingTransaction bookingTransaction);
 }

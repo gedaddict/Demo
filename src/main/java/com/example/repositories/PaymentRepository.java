@@ -12,6 +12,7 @@ public interface PaymentRepository {
 	public Payment updatePaymentDetails(Payment payment);
 	public void cancelPaymentAccount(Payment payment);
 	public PaymentTransaction addPaymentTransaction(PaymentTransaction PaymentTransaction);
+	public PaymentTransaction updatePaymentTransaction(PaymentTransaction PaymentTransaction);
 	public PaymentTransaction getPaymentTransaction(String transactionId);
 	public void cancelPaymentTransaction(PaymentTransaction paymentTransaction);
 }
