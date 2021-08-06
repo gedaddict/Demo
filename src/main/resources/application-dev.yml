@@ -3,12 +3,7 @@ mySQL_DATASOURCE_URL: "jdbc:mysql://localhost:3306/mySQLDB"
 mySQL_DATASOURCE_USER: dbuser
 mySQL_DATASOURCE_PASSWORD: dbpass
 
-security:
-   ignored: /**
-
 spring:
-   #profile:
-      #active: dev
    datasource:
       driverClassName: com.mysql.jdbc.Driver
       url: ${mySQL_DATASOURCE_URL}
