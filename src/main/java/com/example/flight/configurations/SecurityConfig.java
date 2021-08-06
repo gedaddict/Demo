@@ -1,29 +1,28 @@
 package com.example.flight.configurations;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import com.example.flight.services.CustomerService;
 import com.example.flight.services.MyUserService;
 
 @Configuration
 @EnableWebSecurity
-//@EnableGlobalMethodSecurity(prePostEnabled = true)
+@Profile("dev")
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
+
+	private final MyUserService myUserService;
+	private final PasswordEncoder passwordEncoder;
 	
-	@Autowired
-	MyUserService myUserService;
+	public SecurityConfig(MyUserService myUserService, PasswordEncoder passwordEncoder) {
+		this.myUserService = myUserService;
+		this.passwordEncoder = passwordEncoder;
+	}
 
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -33,11 +32,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			/*
 			.inMemoryAuthentication()
 				.withUser("admin")
-				.password(passwordEncoder().encode("admin123"))
+				.password(passwordEncoder.encode("admin"))
 				.authorities("ADMIN")
 				.and()
 				.withUser("user")
-				.password(passwordEncoder().encode("user"))
+				.password(passwordEncoder.encode("user"))
 				.authorities("USER");
 			*/
 	}
@@ -50,7 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 			.authorizeRequests()
 			.antMatchers("/login").permitAll()
 			.antMatchers("/", "/home").hasAnyAuthority("ADMIN", "USER")
-			.antMatchers("/flights").hasAuthority("ADMIN")
+			.antMatchers("/flights").hasAnyAuthority("ADMIN", "USER")
 			.antMatchers("/users", "/bookflight").hasAnyAuthority("ADMIN", "USER")			
 			.and()
 			.formLogin()
@@ -66,7 +65,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 				//.clearAuthentication(true)
 			.and()
 			.sessionManagement()
-			.sessionCreationPolicy(SessionCreationPolicy.NEVER)
+			.sessionCreationPolicy(SessionCreationPolicy.NEVER);
 			/*
 			.logout((logout) ->
 					logout.deleteCookies("remove")
@@ -74,15 +73,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 					.logoutUrl("/logout")
 					.logoutSuccessUrl("/logout-success")
 					);
-			*/
-			;
-		
 			
+			;	
+			*/
 	}
 	
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-
 }
